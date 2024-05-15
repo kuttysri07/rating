@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rating System</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <style>
+        #stars span {
+            font-size: 2em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Rating UI -->
+    <div id="rating-system">
+        <h2>Rate this Product</h2>
+        <div id="stars">
+            <span data-value="1">☆</span>
+            <span data-value="2">☆</span>
+            <span data-value="3">☆</span>
+            <span data-value="4">☆</span>
+            <span data-value="5">☆</span>
+        </div>
+        <button onclick="submitRating()">Submit</button>
+    </div>
+    <div id="average-rating"></div>
+
+    <script>
+        // Your Firebase configuration
+       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+            const firebaseConfig = {
+            apiKey: "AIzaSyBapKW6qVPAhC_JeZXMFHg9Xjg5vZEet94",
+            authDomain: "kannantex-6cd90.firebaseapp.com",
+            projectId: "kannantex-6cd90",
+            storageBucket: "kannantex-6cd90.appspot.com",
+            messagingSenderId: "8856176017",
+            appId: "1:8856176017:web:a7746fd704b959dad90630",
+            measurementId: "G-VCGQJ8K9C4"
+            };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Submit Rating
+        let selectedRating = 0;
+        document.getElementById('stars').addEventListener('click', function(event) {
+            if (event.target.dataset.value) {
+                selectedRating = parseInt(event.target.dataset.value);
+                Array.from(document.querySelectorAll('#stars span')).forEach((star, index) => {
+                    star.textContent = index < selectedRating ? '★' : '☆';
+                });
+            }
+        });
+
+        function submitRating() {
+            if (selectedRating > 0) {
+                db.collection('ratings').add({
+                    rating: selectedRating,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    alert('Rating submitted!');
+                    calculateAverageRating();
+                });
+            } else {
+                alert('Please select a rating.');
+            }
+        }
+
+        // Calculate Average Rating
+        function calculateAverageRating() {
+            db.collection('ratings').get().then((querySnapshot) => {
+                let total = 0;
+                let count = 0;
+                querySnapshot.forEach((doc) => {
+                    total += doc.data().rating;
+                    count++;
+                });
+                const averageRating = total / count;
+                document.getElementById('average-rating').textContent = `Average Rating: ${averageRating.toFixed(2)} / 5`;
+            });
+        }
+
+        // Initial Load of Average Rating
+        calculateAverageRating();
+    </script>
+</body>
+</html>
